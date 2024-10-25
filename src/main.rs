@@ -41,7 +41,7 @@ async fn main() {
             let (reply, code) = if let Some(err) = err.find::<Error>() {
                 err.response()
             } else {
-                log::warn!("unhandled rejection: {:?}", err);
+                log::error!("unhandled rejection: {:?}", err);
                 (
                     "INTERNAL_SERVER_ERROR".to_string(),
                     StatusCode::INTERNAL_SERVER_ERROR,
