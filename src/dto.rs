@@ -42,14 +42,14 @@ pub struct Progress {
 
 impl Progress {
     pub fn to_vec(&self) -> Vec<(&str, String)> {
-        let mut vec = Vec::new();
-        vec.push(("document", self.document.clone()));
-        vec.push(("progress", self.progress.clone()));
-        vec.push(("percentage", self.percentage.to_string()));
-        vec.push(("device", self.device.clone()));
-        vec.push(("device_id", self.device_id.clone()));
-        vec.push(("timestamp", self.timestamp.unwrap_or_default().to_string()));
-        vec
+        vec![
+            ("document", self.document.clone()),
+            ("progress", self.progress.clone()),
+            ("percentage", self.percentage.to_string()),
+            ("device", self.device.clone()),
+            ("device_id", self.device_id.clone()),
+            ("timestamp", self.timestamp.unwrap_or_default().to_string()),
+        ]
     }
 
     pub fn validate(&self) -> Result<(), Rejection> {
@@ -91,5 +91,5 @@ impl From<HashMap<String, String>> for Progress {
 }
 
 fn safe_get(map: &HashMap<String, String>, key: &str) -> String {
-    map.get(key).unwrap_or(&format!("")).to_string()
+    map.get(key).unwrap_or(&String::new()).to_string()
 }

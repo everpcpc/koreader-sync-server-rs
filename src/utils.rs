@@ -3,5 +3,5 @@ pub fn is_valid_field(field: &str) -> bool {
 }
 
 pub fn is_valid_key_field(field: &str) -> bool {
-    !field.is_empty() && !field.contains(":")
+    !field.is_empty() && !field.contains(':')
 }

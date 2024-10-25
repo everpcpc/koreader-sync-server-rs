@@ -6,7 +6,7 @@ use warp::reject::Reject;
 pub(crate) enum Error {
     InvalidField(String),
     UserExists(String),
-    RedisError(RedisError),
+    Redis(RedisError),
     Unauthorized,
     Unknown(String),
 }
@@ -17,7 +17,7 @@ impl Error {
     pub fn response(&self) -> (String, StatusCode) {
         match self {
             Error::Unauthorized => ("UNAUTHORIZED".to_string(), StatusCode::UNAUTHORIZED),
-            Error::RedisError(err) => {
+            Error::Redis(err) => {
                 log::error!("redis error: {:?}", err);
                 (
                     "INTERNAL_SERVER_ERROR".to_string(),
@@ -41,6 +41,6 @@ impl Error {
 
 impl From<RedisError> for Error {
     fn from(err: RedisError) -> Self {
-        Error::RedisError(err)
+        Error::Redis(err)
     }
 }
