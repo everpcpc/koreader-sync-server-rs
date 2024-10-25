@@ -1,6 +1,13 @@
 [package]
-name = "koreader-sync-server-rs"
+name = "kosync"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+argh = "0.1"
+futures-util = "0.3"
+log = "0.4"
+pretty_env_logger = "0.5"
+redis = { version = "0.27", features = ["tokio-comp"] }
+tokio = { version = "1", features = ["full"] }
+warp = "0.3"
