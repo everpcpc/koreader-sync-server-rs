@@ -59,7 +59,7 @@ pub fn update_progress(
     client: Client,
 ) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
     warp::path!("syncs" / "progress")
-        .and(warp::post())
+        .and(warp::put())
         .and(with_auth(client.clone()))
         .and(with_redis(client))
         .and(warp::body::json())
