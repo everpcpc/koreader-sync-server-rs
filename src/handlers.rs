@@ -55,7 +55,8 @@ pub async fn authorize(
 }
 
 pub async fn healthcheck() -> Result<impl Reply, Infallible> {
-    Ok("ok")
+    let resp = HashMap::from([("state", "OK")]);
+    Ok(warp::reply::json(&resp))
 }
 
 pub async fn auth_user(_: String) -> Result<impl Reply, Infallible> {
