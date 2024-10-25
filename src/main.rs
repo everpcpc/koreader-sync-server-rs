@@ -3,6 +3,7 @@ use std::convert::Infallible;
 use argh::FromArgs;
 use warp::http::StatusCode;
 use warp::reject::Rejection;
+use warp::reply;
 use warp::Filter;
 
 mod dto;
@@ -29,6 +30,32 @@ struct Config {
     redis: String,
 }
 
+fn get_rejection_status(err: &Rejection) -> StatusCode {
+    if err.is_not_found() {
+        StatusCode::NOT_FOUND
+    } else if err.find::<warp::reject::MethodNotAllowed>().is_some() {
+        StatusCode::METHOD_NOT_ALLOWED
+    } else if err.find::<warp::reject::InvalidHeader>().is_some()
+        || err.find::<warp::reject::MissingHeader>().is_some()
+        || err.find::<warp::reject::MissingCookie>().is_some()
+        || err.find::<warp::reject::InvalidQuery>().is_some()
+        || err.find::<warp::body::BodyDeserializeError>().is_some()
+        || err.find::<warp::ws::MissingConnectionUpgrade>().is_some()
+    {
+        StatusCode::BAD_REQUEST
+    } else if err.find::<warp::reject::LengthRequired>().is_some() {
+        StatusCode::LENGTH_REQUIRED
+    } else if err.find::<warp::reject::PayloadTooLarge>().is_some() {
+        StatusCode::PAYLOAD_TOO_LARGE
+    } else if err.find::<warp::reject::UnsupportedMediaType>().is_some() {
+        StatusCode::UNSUPPORTED_MEDIA_TYPE
+    } else if err.find::<warp::cors::CorsForbidden>().is_some() {
+        StatusCode::FORBIDDEN
+    } else {
+        StatusCode::INTERNAL_SERVER_ERROR
+    }
+}
+
 #[tokio::main]
 async fn main() {
     pretty_env_logger::init();
@@ -38,16 +65,16 @@ async fn main() {
 
     let api = filters::routes(db)
         .recover(|err: Rejection| async move {
-            let (reply, code) = if let Some(err) = err.find::<Error>() {
-                err.response()
+            if let Some(e) = err.find::<Error>() {
+                let (msg, status) = e.response();
+                Ok::<_, Infallible>(reply::with_status(msg, status))
             } else {
-                log::error!("unhandled rejection: {:?}", err);
-                (
-                    "INTERNAL_SERVER_ERROR".to_string(),
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                )
-            };
-            Ok::<_, Infallible>(warp::reply::with_status(reply, code))
+                let status = get_rejection_status(&err);
+                if status == StatusCode::INTERNAL_SERVER_ERROR {
+                    log::error!("unhandled rejection: {:?}", err);
+                }
+                Ok::<_, Infallible>(reply::with_status(String::new(), status))
+            }
         })
         .with(warp::log("kosync"));
     warp::serve(api).run(([0, 0, 0, 0], cfg.port)).await;
