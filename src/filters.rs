@@ -1,5 +1,8 @@
-use redis::{aio::MultiplexedConnection, Client};
-use warp::{Filter, Rejection, Reply};
+use redis::AsyncCommands;
+use redis::Client;
+use warp::Filter;
+use warp::Rejection;
+use warp::Reply;
 
 use crate::handlers;
 
@@ -13,7 +16,7 @@ pub fn routes(client: Client) -> impl Filter<Extract = (impl Reply,), Error = Re
 
 fn with_redis(
     client: Client,
-) -> impl Filter<Extract = (MultiplexedConnection,), Error = Rejection> + Clone {
+) -> impl Filter<Extract = (impl AsyncCommands,), Error = Rejection> + Clone {
     warp::any()
         .map(move || client.clone())
         .and_then(handlers::get_conn)

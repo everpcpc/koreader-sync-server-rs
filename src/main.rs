@@ -2,11 +2,14 @@ use std::convert::Infallible;
 
 use argh::FromArgs;
 use warp::http::StatusCode;
-use warp::{reject::Rejection, Filter};
+use warp::reject::Rejection;
+use warp::Filter;
 
+mod dto;
 mod filters;
 mod handlers;
 mod rejection;
+mod utils;
 
 use crate::rejection::Error;
 
@@ -36,16 +39,7 @@ async fn main() {
     let api = filters::routes(db)
         .recover(|err: Rejection| async move {
             let (reply, code) = if let Some(err) = err.find::<Error>() {
-                match err {
-                    Error::Unauthorized => ("UNAUTHORIZED".to_string(), StatusCode::UNAUTHORIZED),
-                    Error::Unknown => {
-                        log::error!("unknown error: {:?}", err);
-                        (
-                            "INTERNAL_SERVER_ERROR".to_string(),
-                            StatusCode::INTERNAL_SERVER_ERROR,
-                        )
-                    }
-                }
+                err.response()
             } else {
                 log::warn!("unhandled rejection: {:?}", err);
                 (
